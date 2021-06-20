@@ -1,13 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
 <h1> File Upload in node js app </h1>
 
 <form method="POST" action="/" enctype="multipart/form-data">
 
-    <input type="file" name="file" multiple />
+    <input type="file" name="file" id="files" multiple />
 
-    <input type="submit" value="Upload" />
+    <input type="submit" value="File/Files Upload" />
 
 </form>
+
+<form method="post" enctype="multipart/form-data" action="/">
+    <input type="file" name="files[]" id="files" multiple="" directory="" webkitdirectory="" mozdirectory="">
+    <input class="button" type="submit" value="Directory Upload" />
+</form>
+
 
 <form method="GET" action="/uploads" >
     <input type="submit" value="view uploaded content" />
 </form>
+
+Percent Complete: <span id="status">0</span>%
+
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script>
+    let i=1;
+    let n;
+
+    $('#files').on('change',function(){
+        console.log(document.getElementById('files').files)
+        let filesInformation = document.getElementById('files').files
+        let data=[]
+        let key={
+            value:[]
+        }
+        n=filesInformation.length
+        for(let i1=0;i1<filesInformation.length;i1++){
+            data.push({
+                fileName:filesInformation[i1].name,
+                fileSize:filesInformation[i1].size,
+                fileType:filesInformation[i1].type,
+                fileModifiedDate:filesInformation[i1].lastModifiedDate
+            })
+        }
+        key.value=data
+        key = JSON.stringify(key)
+        console.log(data.toString())
+        let fuck = data.toString();
+        var fileName = document.getElementById('files').files[0].name;
+        var fileSize = document.getElementById('files').files[0].size;
+        var fileType = document.getElementById('files').files[0].type;
+        var fileModifiedDate = document.getElementById('files').files[0].lastModifiedDate;
+        var file_info = fileName+"\n"+fileSize+"\n"+fileType+"\n"+fileModifiedDate;
+        console.log('file_info',file_info)
+        // console.log('Length ',document.getElementById('files').files.length)
+        $.post('/getFileInfo',{key},function(data,status){
+            console.log('Data :',data,'Status :',status)
+        })
+    })
+
+    $('form').on('submit',function(){
+        console.log('Inside on submit AJAX')
+        let poll= setInterval(function(){
+            $.get('/checkstatus').then(function (data,status) {
+                console.log(data,status)
+                console.log(i,n)
+                document.getElementById('status').innerHTML = data.percent
+                i=data.filenumber;
+                //when it's done, stop annoying the server
+                if(i==n-1&&(data.percent>95||data.percent>92)){
+                    clearInterval(poll)
+                }
+            });
+        }, 200);
+        // $.get('/checkstatus')
+    })
+
+</script>
+
+</html>
